@@ -1,0 +1,43 @@
+---
+title: "Business Analytics- Assignment 1"
+output:
+  word_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+```{r}
+#ISLR package has already been installed using install.packages("ISLR") 
+#Calling the ISLR Library
+library(ISLR) 
+
+#Printing the summary of carseats data
+summary(Carseats)
+
+
+#Finding the number of observations (rows) in the dataset
+nrow(Carseats)
+
+
+#Finding the maximum value of the advertising attribute
+max(Carseats$Advertising)
+
+
+#Calculating Interquartile Range of the price attribute
+IQR(Carseats$Price)
+
+
+#Plotting Sales against Price
+plot(Carseats$Price, Carseats$Sales, main = "Sales against Price plot ", xlab = "Price", ylab = "Sales")
+#Observations - The two variables x=Price and y=Sales have a negative association because it is noticed that as the price increases the sales of carseats decreases.
+
+
+#Calculating the correlation of two attributes (Sales and Price)
+cor(Carseats$Sales, Carseats$Price)
+#Observations - We have considered the correlation between sales and price where the correlation value is -0.4449507. Here the value lies between 0 and -1 therefore it is considered to have a negative or inverse correlation. 
+```
+
+
+
