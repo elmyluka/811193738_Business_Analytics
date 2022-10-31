@@ -1,0 +1,227 @@
+---
+title: "Business Analytics- Assignment-2 "
+author: "Elmy Luka"
+output:
+  word_document: default
+  html_notebook: default
+  pdf_document: default
+---
+```{r}
+Online_Retail <- read.csv("~/Desktop/MS BA/Business Analytics/Assignment-2/Online_Retail.csv")
+
+#TASK-1
+
+#Showing the number of transaction by countries i.e 
+#the number of transactions in the dataset for each country.
+#(Considering all records including cancelled transactions)
+total_transactions.by.country <- table(Online_Retail$Country)
+#Showing the number of transactions in the dataset for 
+#each country in total number and also in percentage.
+transaction_percent<-round(100*prop.table(total_transactions.by.country))
+percentage <- cbind(total_transactions.by.country, transaction_percent)
+#Countries accunting more than 1%
+result <- subset(percentage, transaction_percent >1)
+result
+
+
+
+#TASK-2
+
+library(dplyr)
+
+#Creating  a  new  variable  ‘TransactionValue’  that  is  
+#the  product of  the  existing  ‘Quantity’  and  UnitPrice’ 
+#variables and adding this variable to the dataframe.
+
+TransactionValue <- Online_Retail$Quantity * Online_Retail$UnitPrice
+Online_Retail<- Online_Retail %>% mutate(TransactionValue)
+summary(Online_Retail$TransactionValue)
+
+
+#TASK-3
+
+#total sum of transaction i.e money in total that has been 
+#spent by each country
+sum <- sum(TransactionValue)
+data <- summarise(group_by(Online_Retail, Country), sum)
+
+#Countries with transaction exceeding 130,000 British Pound
+exceed_transaction <- filter(data, sum > 130000)
+exceed_transaction
+
+
+
+
+#TASK-4
+#Creating a POSIXlt to object from "InvoiceDate":
+Temp=strptime(Online_Retail$InvoiceDate,format='%m/%d/%Y %H:%M',tz='GMT')
+
+#spliting the dataframe components for the date, 
+#day of the week, and hour under the labels New_Invoice_Date, Invoice_Day_Week, and New_Invoice_ Hour
+
+Online_Retail$New_Invoice_Date<-as.Date(Temp)
+
+#determining two date values gives the ability to 
+#analyse how many days are between the two dates.
+Online_Retail$New_Invoice_Date[20000]-Online_Retail$New_Invoice_Date[10]
+
+#Creating a new variable to convert dates to weekdays.
+Online_Retail$Invoice_Day_Week=weekdays(Online_Retail$New_Invoice_Date)
+
+#turning hour into a standard numerical value for 
+#the hour (ignore the minute)
+Online_Retail$New_Invoice_Hour =as.numeric(format(Temp,"%H"))
+
+#defining the month as a separate numeric variable
+Online_Retail$New_Invoice_Month = as.numeric(format(Temp, "%m"))
+
+#Answering the following questions
+
+#4.a) Show  the  percentage  of  transactions  
+#(by  numbers)  by  days  of  the  week  
+#(extra  1%  of  total  points)
+Online_Retail%>%
+  group_by(Invoice_Day_Week)%>%
+  summarise(Number_of_transactions=(n()))%>%
+  mutate(Number_of_transactions,'Percentage'=(Number_of_transactions*100)/sum(Number_of_transactions))
+
+#4.b)Show  the  percentage  of  transactions  
+#(by transaction  volume)  bydays  of  the  week
+Online_Retail%>%
+  group_by(Invoice_Day_Week)%>%
+  summarise(Volume_of_transactions=(sum(TransactionValue)))%>%
+  mutate(Volume_of_transactions,'Percentage'=(Volume_of_transactions*100)/sum(Volume_of_transactions))
+
+#4.c)Show the percentage of transactions 
+#(by transaction volume) by month of the year
+Online_Retail%>%group_by(New_Invoice_Month)%>%
+  summarise(Volume_Transaction_By_Month=sum(TransactionValue))%>%
+  mutate(Volume_Transaction_By_Month,        'Percentage'=(Volume_Transaction_By_Month*100)/
+           sum(Volume_Transaction_By_Month))
+
+#4.d)What was the date with the highest number 
+#of transactions from Australia? 
+Online_Retail <- Online_Retail %>% 
+  mutate(TransactionValue= Quantity * UnitPrice)
+Online_Retail %>% filter(Country == 'Australia') %>% group_by(New_Invoice_Date) %>% 
+  summarise(max = max(TransactionValue))
+ 
+
+#4.e)The company needs to shut  down the  website  
+#for two consecutive hours for maintenance. What 
+#would be the hour of the day to start this so 
+#that the distribution is at minimum for the customers? 
+#The responsible IT team is available from 7:00 to 20:00 
+#every day.
+library(zoo)
+hour<-summarise(group_by(Online_Retail,New_Invoice_Hour),Transaction_min=n_distinct(InvoiceNo))
+hour<-filter(hour,New_Invoice_Hour>=7&New_Invoice_Hour<=20)
+hour_2<-rollapply(hour$Transaction_min,2,sum)
+hour_3<-which.min(hour_2)
+hour_3
+
+
+
+
+#TASK-5
+
+#Plotting the histogram of transaction values from Germany. 
+#(Using the hist() function to plot) 
+Germany_transaction_value <- subset(Online_Retail$TransactionValue, Online_Retail$Country == "Germany") 
+
+hist(Germany_transaction_value, xlim = c (-600, 900),
+     breaks = 100 , xlab = "Transaction Values of Germany", main = "Germany")
+
+
+
+#TASK-6
+
+#Finding the customer who had the highest number of 
+#transactions and also who is the most valuable
+#(i.e. the customer with highest total sum of transactions)
+retail_1 <- na.omit(Online_Retail)
+result_1 <- summarise(group_by(retail_1,CustomerID), sum2= sum(TransactionValue))
+result_1[which.max(result_1$sum2),]
+data_1 <- table(Online_Retail$CustomerID)
+data_1 <- as.data.frame(data_1)
+result_2 <- data_1[which.max(data_1$Freq),]
+result_2
+
+
+
+
+#TASK-7
+
+#Calculating  the  percentage  of  missing  
+#values  for  each  variable  in  the  dataset. 
+missing_values <- colMeans(is.na(Online_Retail)*100)
+missing_values
+
+
+
+#TASK-8
+
+#Finding the number of transactions with 
+#missing CustomerID records by countries.
+retail_2 <- Online_Retail %>% filter(is.na(CustomerID)) %>% group_by(Country)
+summary(retail_2$Country)
+
+
+#TASK-9 
+
+#Finding on an average how often the costumers 
+#comeback to the website for their next shopping 
+#(i.e. finding  the  average  number  of  days  
+#between  consecutive shopping)
+
+average_1<-Online_Retail%>%group_by(CustomerID)%>%
+  summarise(difference_in_consecutive_days=diff(New_Invoice_Date))%>%
+  filter(difference_in_consecutive_days>0)
+print(paste('the average  number  of  days 
+            between  consecutive  shopping is',mean(average_1$difference_in_consecutive_days)))
+
+
+
+
+
+#TASK-10
+
+#With this definition, what is the return 
+#rate for the French customers? 
+retail_table <- filter(Online_Retail,Country=="France")
+total_row <- nrow(retail_table)
+
+#(10 marks). Consider the cancelled transactions 
+#as those where the ‘Quantity’ 
+#variable has a negative value. 
+cancel <- nrow(subset(retail_table,TransactionValue<0))
+cancel
+
+non_cancelled <- total_row-cancel 
+non_cancelled
+
+test_1=(cancel/8556)
+test_1
+
+
+
+
+#TASK-11
+#What is the product that has generated the 
+#highest revenue for the retailer? 
+#(i.e. item with the highest total sum of ‘TransactionValue’). 
+TransactionValue <- tapply(Online_Retail$TransactionValue, Online_Retail$StockCode , sum)
+TransactionValue[which.max(TransactionValue)]
+
+
+
+
+#TASK-12
+#Finding the number of unique customers who 
+#are represented in the dataset using unique() and 
+#length() functions. 
+unique_customers <- unique(Online_Retail$CustomerID)
+length(unique_customers)
+```
+
+
