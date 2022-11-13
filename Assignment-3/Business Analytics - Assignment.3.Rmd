@@ -1,0 +1,154 @@
+---
+title: "Regression Analytics"
+author: "Elmy Luka"
+date: "2022-11-13"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library('dplyr')
+library('tidyverse')
+library('tinytex')
+```
+
+
+#1.  Run the following code in R-studio to create two variablesX and Y. 
+#set.seed(2017) 
+#X=runif(100)*10 
+#Y=X*4+3.45 
+#Y=rnorm(100)*0.29*Y+Y 
+
+```{r}
+set.seed(2017) 
+X=runif(100)*10 
+Y=X*4+3.45 
+Y=rnorm(100)*0.29*Y+Y 
+
+```
+
+#1a)  Plot Y against X. Include a screenshot of the plot in your submission. Using the File menu you can save the graph as a picture on your computer. Based on the plot do you think we can fit a linear model to explain Y based on X?
+
+```{r}
+plot(Y~X,xlab='X',ylab='Y',col='blue')
+abline(lsfit(X, Y),col = "orange")
+```
+#From the plot it can be concluded that there is a correlation between the variables "x" and "y". Therefore linear model is a good fit as we can see a positive correlation between the attritbutes. 
+
+
+
+#1b)  Construct a simple linear model of Y based on X. Write the equation that explains Y based on X. What is the accuracy of this model?
+
+#The linear model of Y based on X is given by the equation Y = 4.4655 + 3.6108 * X
+#The accuracy of the model is 0.6517 or 65% .Additionally, this shows that X can account for 65.17 percent of the variation in Y.
+
+```{r}
+linear_model <- lm(Y ~ X)
+summary(linear_model)
+```
+#1c)    How  the  Coefficient  of  Determination,  R2,  of  the  model  above  is  related  to  the  correlation coefficient of X and Y?
+
+```{r}
+cor(X,Y)^2
+```
+#The coefficient of determination is equal to the square of the correlation coefficient.Therefore both the values of the coefficient of determination (R2) and the correlation coefficient of Y and X would be same.
+
+
+
+
+#2.    We  will  use  the  ‘mtcars’  dataset  for  this  question.  The  dataset  is  already  included  in  your R  distribution. The dataset shows some of the characteristics of different cars. The following shows few samples (i.e. the first 6 rows) of the dataset. The description of the dataset can be found here.
+ 
+```{r}
+head(mtcars)
+```
+#2a)	   James wants to buy a car.  He and his friend,Chris, have different opinions about the Horse Power (hp) of cars.James think the weight of a car (wt) can be used to estimate the Horse Power of the car while Chris thinks the fuel consumption expressed in Mile Per Gallon (mpg), is a better estimator of the (hp). Who do you think is right? Construct simple linear models using mtcars data to answer the question.
+
+#Model from James estimation.
+```{r}
+plot(mtcars$hp~mtcars$wt,xlab='Weight',ylab='HP',col='pink')
+abline(lsfit(mtcars$wt,mtcars$hp),col = "green")
+james_model<-lm(formula =hp~wt, data = mtcars )
+summary(james_model)
+```
+#This model has an accuracy of 0.4339
+
+#Model from Chris estimation
+```{r}
+plot(mtcars$hp~mtcars$mpg,xlab='MPG',ylab='HP',col='green')
+abline(lsfit(mtcars$mpg, mtcars$hp),col = "pink")
+chris_model<-lm(formula =hp~mpg, data = mtcars )
+summary(chris_model)
+```
+#This model has an accuracy of 0.6024.
+
+#From the above models, it can be concluded that the estimation done by Chris is correct.
+
+#2b)    Build a model that uses the number of cylinders (cyl) and the mile per gallon (mpg) values of a car to predict the car Horse Power (hp). Using this model, what is the estimated Horse Power of a car with 4 calendar and mpg of 22? 
+
+```{r}
+horse_power<-lm(hp~cyl+mpg,data = mtcars)
+summary(horse_power)
+estimate_horse_power<-predict(horse_power,data.frame(cyl=4,mpg=22))
+estimate_horse_power
+```
+#The estimated Horse Power is 88.93618
+
+
+#3.  	For this question, we are going to use BostonHousing dataset. The dataset is in ‘mlbench’ package, so we first need to install the package, call the library and load the dataset using the following commands.
+
+```{r}
+
+#installing and running required packages
+library('mlbench') 
+
+data(BostonHousing)
+str(BostonHousing)
+
+```
+#3a)    Build a model to estimate the median value of owner-occupied homes (medv)based on the following variables: crime crate (crim), proportion of residential land zoned for lots over 25,000 sq.ft (zn), the local pupil-teacher ratio (ptratio) and weather the whether the tract bounds Chas River(chas). Is this an accurate model?
+
+
+```{r}
+owner_occupied_homes <- lm(medv~crim+zn+ptratio+chas,data=BostonHousing)
+summary(owner_occupied_homes)
+
+```
+#This model's accuracy is 0.3599. Therefore it is quite inaccurate.
+
+
+#3b)   Use the estimated coefficient to answer these questions?
+
+#I.  Imagine two houses that are identical in all aspects but one bounds the Chas River and the other does not. Which one is more expensive and by how much?
+
+#Answer:  Chas is a factorial variable. Number "1" stands for the ones that are bound to Chas River while "0" is for those who are not bound to the Chas River. From the data it can be concluded  that the median value of owner-occupied homes is $1,000, and the chas1 coefficient is 4.58393. When compared to a house that is not bound to the Chas River, the house that is bound to the Chas River will be more expensive by 4.58393 in $1000.
+
+
+#II.	 Imagine two houses that are identical in all aspects but in the neighborhood of one of them the pupil-teacher ratio is 15 and in the other one is 18. Which one is more expensive and by how much?
+
+#Answer:  The pupil to teacher ratio basically measures how many students a teacher is allotted, and the lower this number is, the more expensive the communities or the homes will be. Property prices decrease by 1.49367 for every unit that the ptratio rises (in thousands). If the ptratio is 15, the fall will be 15 * 1493.67=22405.05. If the ptratio is 18, for instance, the #decrease will be 18 * 1493.67=26886.06. Therefore, a 15 ptratio will cost $4481.01 more, than an 18 ptratio.
+
+
+#3c)    Which of the variables are statistically important(i.e. related to the house price)? 
+
+#Answer:  The p values for all variables are not equal to zero. 
+#It is indicating that we can confidently reject the default 
+#null hypothesis since there is no relationship between house price 
+#and other variables in the model. Each variable is 
+#therefore statistically significant.
+
+
+#3d) 	Use the anova analysis and determine the order of importance of these four variables.
+```{r}
+anova(owner_occupied_homes )
+```
+#Answer:   In comparison to other variables, the crim variable is seen to explain a proportionally higher sum squared amount of variability. We can assume that adding the crim improved the model greatly. Residuals, however, reveal that a significant portion of the variability is unaccounted for. 
+#The rankings are as follows-
+#1) crime crate (crim) is 6440.8
+#2) The ptratio (ptratio) is 4709.5  
+#3) zn is 3554.3
+#4) Chas is 667.2
